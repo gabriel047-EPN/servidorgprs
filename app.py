@@ -5,12 +5,11 @@ app = Flask(__name__)
 # ============================================================
 # CONSTANTES ITU-T G.694.1
 # ============================================================
-C = 2.99792458e8      # Velocidad de la luz en el vacío (m/s)
-F_REF = 193.1         # Frecuencia de referencia ITU (THz)
-DELTA_F = 0.0125      # Granularidad mínima (THz = 12.5 GHz)
+C = 2.99792458e8      # Velocidad de la luz (m/s)
+F_REF = 193.1         # Frecuencia de referencia (THz)
+DELTA_F = 0.0125      # Granularidad base (THz = 12.5 GHz)
 
-# Rango ilustrativo (bandas C + L)
-# NOTA: Los extremos son ilustrativos, no normativos
+# Rango ilustrativo (Bandas C + L)
 F_MIN = 184.5000
 F_MAX = 195.9375
 
@@ -20,19 +19,15 @@ F_MAX = 195.9375
 # ============================================================
 def frecuencia_a_lambda_nm(f_thz):
     """
-    Convierte una frecuencia en THz a una longitud de onda
-    aproximada en nanómetros (nm).
+    Convierte frecuencia (THz) a longitud de onda aproximada (nm)
     """
     return (C / (f_thz * 1e12)) * 1e9
 
 
 def generar_tablas_dwdm():
     """
-    Genera tablas DWDM separadas por espaciamiento de canal
-    conforme a la recomendación ITU-T G.694.1.
-
-    Cada canal se representa como un diccionario para facilitar
-    su uso en plantillas HTML (Jinja2).
+    Genera tablas DWDM separadas por espaciamiento,
+    derivadas del grid base de 12.5 GHz según ITU-T G.694.1
     """
 
     tablas = {
@@ -47,33 +42,32 @@ def generar_tablas_dwdm():
 
     for n in range(n_min, n_max + 1):
 
-        frecuencia = round(F_REF + n * DELTA_F, 4)
-        longitud_onda = round(frecuencia_a_lambda_nm(frecuencia), 4)
+        # Frecuencia central basada en grid de 12.5 GHz
+        f = round(F_REF + n * DELTA_F, 4)
 
-        canal = {
-            "n": n,
-            "frecuencia": frecuencia,
-            "longitud_onda": longitud_onda
-        }
+        # Longitud de onda aproximada (solo referencia)
+        lambda_nm = round(frecuencia_a_lambda_nm(f), 4)
 
-        # Grid base de 12.5 GHz (todos los canales)
-        tablas["12.5 GHz"].append(canal)
+        # 12.5 GHz → todos los canales
+        tablas["12.5 GHz"].append((n, f, lambda_nm))
 
-        # Subgrids según ITU-T G.694.1
+        # 25 GHz → subconjunto (n par)
         if n % 2 == 0:
-            tablas["25 GHz"].append(canal)
+            tablas["25 GHz"].append((n, f, lambda_nm))
 
+        # 50 GHz → subconjunto (n múltiplo de 4)
         if n % 4 == 0:
-            tablas["50 GHz"].append(canal)
+            tablas["50 GHz"].append((n, f, lambda_nm))
 
+        # 100 GHz → subconjunto (n múltiplo de 8)
         if n % 8 == 0:
-            tablas["100 GHz"].append(canal)
+            tablas["100 GHz"].append((n, f, lambda_nm))
 
     return tablas
 
 
 # ============================================================
-# RUTA PRINCIPAL
+# RUTA WEB PRINCIPAL
 # ============================================================
 @app.route("/")
 def index():
