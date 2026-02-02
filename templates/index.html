@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>DWDM - Rejilla ITU-T G.694.1</title>
+    <title>DWDM – ITU-T G.694.1</title>
 
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 40px;
-            background-color: #f5f5f5;
+            background-color: #f4f6f8;
         }
 
         header {
@@ -24,20 +24,20 @@
             height: 80px;
         }
 
-        h1, h2 {
+        h1, h2, h3 {
             color: #003366;
         }
 
         table {
             border-collapse: collapse;
             width: 100%;
-            background-color: white;
+            background: white;
             margin-top: 15px;
         }
 
         th, td {
             border: 1px solid #999;
-            padding: 8px;
+            padding: 6px;
             text-align: center;
         }
 
@@ -46,32 +46,45 @@
             color: white;
         }
 
-        p {
-            text-align: justify;
-        }
-
         button {
             background-color: #003366;
             color: white;
+            padding: 10px 15px;
             border: none;
-            padding: 8px 15px;
             cursor: pointer;
-            border-radius: 5px;
-            margin-bottom: 10px;
+            margin-top: 10px;
         }
 
         button:hover {
             background-color: #0055aa;
         }
+
+        .contenido {
+            display: none;
+            margin-bottom: 40px;
+        }
+
+        img.grafico {
+            max-width: 100%;
+            background: white;
+            padding: 10px;
+            border: 1px solid #999;
+            margin-top: 15px;
+        }
     </style>
+
+    <script>
+        function toggle(id) {
+            const div = document.getElementById(id);
+            div.style.display = div.style.display === "none" ? "block" : "none";
+        }
+    </script>
 </head>
 
 <body>
 
-<!-- ================= ENCABEZADO ACADÉMICO ================= -->
-
 <header>
-    <img src="{{ url_for('static', filename='logo_epn.png') }}" alt="Logo EPN">
+    <img src="{{ url_for('static', filename='logo_epn.png') }}">
     <div>
         <h2>Escuela Politécnica Nacional</h2>
         <p><b>Asignatura:</b> Redes Ópticas</p>
@@ -80,78 +93,57 @@
     </div>
 </header>
 
-<!-- ================= INTRODUCCIÓN ================= -->
-
-<h1>Rejilla DWDM según ITU-T G.694.1</h1>
+<h1>Rejilla DWDM – ITU-T G.694.1</h1>
 
 <p>
-La recomendación ITU-T G.694.1 define una rejilla fija de frecuencias
-centrales para sistemas DWDM, basada en una frecuencia de referencia
-de <b>193.1 THz</b>. A partir de esta referencia se generan los canales
-ópticos con una granularidad mínima de 12.5 GHz.
+La recomendación ITU-T G.694.1 define una rejilla DWDM fija anclada a
+<b>193.1 THz</b>. El índice <b>n</b> se mantiene constante para todas las
+separaciones; lo que cambia es qué valores de <b>n</b> son utilizados según
+la granularidad espectral.
 </p>
-
-<p>
-Las tablas siguientes muestran las frecuencias centrales nominales y
-sus longitudes de onda aproximadas para diferentes espaciamientos
-de canal. Debido a la gran cantidad de canales, las tablas se presentan
-de forma desplegable.
-</p>
-
-<!-- ================= TABLAS DESPLEGABLES ================= -->
 
 {% for nombre, filas in tablas.items() %}
+<h2>Espaciamiento {{ nombre }}</h2>
 
-<h2>Espaciamiento de canal: {{ nombre }}</h2>
-
-<p>
-Esta tabla corresponde a un sistema DWDM con espaciamiento de
-<b>{{ nombre }}</b>, derivado como subconjunto del grid base de 12.5 GHz.
-</p>
-
-<button onclick="toggleTabla('tabla_{{ loop.index }}')">
-    Mostrar / Ocultar tabla
+<button onclick="toggle('tabla{{ loop.index }}')">
+    Mostrar / Ocultar tabla y gráfico
 </button>
 
-<div id="tabla_{{ loop.index }}" style="display:none; margin-bottom:40px;">
+<div class="contenido" id="tabla{{ loop.index }}">
 
 <table>
     <tr>
-        <th>Índice (n)</th>
-        <th>Frecuencia central (THz)</th>
-        <th>Longitud de onda aproximada (nm)</th>
+        <th>n</th>
+        <th>Frecuencia (THz)</th>
+        <th>Longitud de onda (nm)</th>
     </tr>
 
     {% for fila in filas %}
     <tr>
-        <td>{{ fila[0] }}</td>
-        <td>{{ fila[1] }}</td>
-        <td>{{ fila[2] }}</td>
+        <td>{{ fila.n }}</td>
+        <td>{{ fila.f }}</td>
+        <td>{{ fila.lambda }}</td>
     </tr>
     {% endfor %}
 </table>
 
-</div>
-
-{% endfor %}
-
-<!-- ================= NOTA FINAL ================= -->
-
+<h3>Representación gráfica</h3>
 <p>
-<b>Nota:</b> Las longitudes de onda mostradas son aproximaciones obtenidas
-mediante la conversión frecuencia–longitud de onda usando la velocidad
-de la luz en el vacío (<i>c = 2.99792458 × 10⁸ m/s</i>). En aplicaciones DWDM,
-las especificaciones normativas se definen con respecto a la frecuencia
-central nominal.
+Se observa que al aumentar el espaciamiento de canal disminuye el número
+de frecuencias disponibles dentro del mismo rango espectral.
 </p>
 
-<script>
-function toggleTabla(id) {
-    const div = document.getElementById(id);
-    div.style.display = (div.style.display === "none") ? "block" : "none";
-}
-</script>
+<img class="grafico"
+     src="{{ url_for('static', filename='grafico_' + nombre.replace(' ', '_').replace('.', '') + '.png') }}">
+
+</div>
+{% endfor %}
+
+<p>
+<b>Nota:</b> Las longitudes de onda son aproximadas y se obtienen usando
+<i>c = 2.99792458 × 10⁸ m/s</i>. En sistemas DWDM, las especificaciones
+normativas se definen respecto a la frecuencia central.
+</p>
 
 </body>
 </html>
-
