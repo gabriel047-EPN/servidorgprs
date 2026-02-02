@@ -56,13 +56,48 @@ def generar_tablas_dwdm():
     return tablas
 
 
+def generar_canales_flex():
+    """
+    Ejemplo de canales flexible grid ITU-T G.694.1
+    """
+    canales = [
+        {"n": -8, "m": 4},   # 50 GHz
+        {"n": 0,  "m": 4},   # 50 GHz
+        {"n": 19, "m": 6},   # 75 GHz
+        {"n": 31, "m": 6},   # 75 GHz
+    ]
+
+    resultado = []
+
+    for c in canales:
+        n = c["n"]
+        m = c["m"]
+
+        f_central = F_REF + n * DELTA_F
+        ancho = m * DELTA_F
+
+        f_ini = f_central - ancho / 2
+        f_fin = f_central + ancho / 2
+
+        resultado.append({
+            "n": n,
+            "m": m,
+            "f_ini": round(f_ini, 4),
+            "f_fin": round(f_fin, 4),
+            "ancho": round(ancho * 1000, 1)  # GHz
+        })
+
+    return resultado
+
+
 # ============================================================
 # RUTA WEB
 # ============================================================
 @app.route("/")
 def index():
     tablas = generar_tablas_dwdm()
-    return render_template("index.html", tablas=tablas)
+    canales = generar_canales_flex()
+    return render_template("index.html", tablas=tablas, canales=canales)
 
 
 # ============================================================
@@ -70,4 +105,5 @@ def index():
 # ============================================================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)
+
